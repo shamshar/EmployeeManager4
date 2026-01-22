@@ -1,0 +1,78 @@
+﻿@page "/departments/edit"
+@using WiredBrainCoffee.EmployeeManager.Models
+@using WiredBrainCoffee.EmployeeManager.Services
+@inject IDepartmentService DepartmentService
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<PageTitle>Edit Department</PageTitle>
+
+<h1>Edit Department</h1>
+<hr />
+
+@if (Department is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm EditContext="@editContext" OnValidSubmit="UpdateDepartment" FormName="editDepartmentForm">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="mb-3">
+                    <label for="name" class="form-label">Name:</label>
+                    <InputText id="name" @bind-Value="Department.Name" class="form-control" />
+                    <ValidationMessage For="() => Department.Name" class="text-danger" />
+                </div>
+
+                <button type="submit" class="btn btn-primary">Save</button>
+                <a class="btn btn-secondary ms-2" href="/departments">Back to List</a>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+    [SupplyParameterFromQuery]
+    public int Id { get; set; }
+
+    DepartmentEditDto? Department;
+    EditContext? editContext;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var dto = await DepartmentService.GetByIdAsync(Id);
+
+        if (dto is null)
+        {
+            NavigationManager.NavigateTo("/notfound");
+            return;
+        }
+
+        Department = new DepartmentEditDto
+        {
+            Id = dto.Id,
+            Name = dto.Name
+        };
+
+        editContext = new EditContext(Department);
+    }
+
+    async Task UpdateDepartment()
+    {
+        if (Department is null) return;
+
+        try
+        {
+            await DepartmentService.UpdateAsync(Department);
+            NavigationManager.NavigateTo("/departments");
+        }
+        catch (InvalidOperationException)
+        {
+            NavigationManager.NavigateTo("/notfound");
+        }
+    }
+}

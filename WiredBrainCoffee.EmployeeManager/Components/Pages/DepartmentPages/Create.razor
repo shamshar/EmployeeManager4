@@ -1,0 +1,54 @@
+﻿@page "/departments/create"
+
+@using WiredBrainCoffee.EmployeeManager.Models
+@using WiredBrainCoffee.EmployeeManager.Services
+@inject IDepartmentService DepartmentService
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<PageTitle>Create Department</PageTitle>
+
+<h1>Create Department</h1>
+<hr />
+
+<div class="row">
+    <div class="col-md-4">
+        <EditForm Model="Department" OnValidSubmit="AddDepartment" FormName="createDepartmentForm">
+            
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" />
+
+            <div class="mb-3">
+                <label for="name" class="form-label">Name:</label>
+                <InputText id="name" @bind-Value="Department.Name" class="form-control" />
+                <ValidationMessage For="() => Department.Name" class="text-danger" />
+            </div>
+
+            <button type="submit" class="btn btn-primary">Create</button>
+            <a class="btn btn-secondary ms-2" href="/departments">Back to List</a>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    
+
+    DepartmentCreateDto? Department;
+
+    protected override void OnInitialized()
+    {
+        Department = new DepartmentCreateDto
+        {
+            Name = string.Empty
+        };
+    }
+
+    async Task AddDepartment()
+    {
+        if (Department is null) return;
+
+        await DepartmentService.CreateAsync(Department);
+        NavigationManager.NavigateTo("/departments");
+    }
+
+}

@@ -1,0 +1,87 @@
+﻿@page "/employees/create"
+@using WiredBrainCoffee.EmployeeManager.Models
+@using WiredBrainCoffee.EmployeeManager.Services
+@inject IEmployeeService EmployeeService
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<PageTitle>Create Employee</PageTitle>
+
+<h1>Create Employee</h1>
+
+@if (Employee is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm Model="Employee" OnValidSubmit="AddEmployee" FormName="createEmployeeForm">
+
+                <DataAnnotationsValidator />
+                <ValidationSummary class="text-danger" />
+
+                <div class="mb-3">
+                    <label for="firstname" class="form-label">First Name:</label>
+                    <InputText id="firstname" @bind-Value="Employee.FirstName" class="form-control" />
+                    <ValidationMessage For="() => Employee.FirstName" class="text-danger" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="lastname" class="form-label">Last Name:</label>
+                    <InputText id="lastname" @bind-Value="Employee.LastName" class="form-control" />
+                    <ValidationMessage For="() => Employee.LastName" class="text-danger" />
+                </div>
+
+                <div class="mb-3 form-check">
+                    <InputCheckbox id="isdeveloper" @bind-Value="Employee.IsDeveloper" class="form-check-input" />
+                    <label class="form-check-label" for="isdeveloper">Is Developer</label>
+                    <ValidationMessage For="() => Employee.IsDeveloper" class="text-danger" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="department" class="form-label">Department:</label>
+                    <InputSelect id="department" @bind-Value="Employee.DepartmentId" class="form-select">
+                        <option value="">Select...</option>
+                        @if (Employee.Departments is not null)
+                        {
+                            @foreach (var dept in Employee.Departments)
+                            {
+                                <option value="@dept.Id">@dept.Name</option>
+                            }
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="() => Employee.DepartmentId" class="text-danger" />
+                </div>
+
+                <button type="submit" class="btn btn-primary">Create</button>
+                <a class="btn btn-secondary ms-2" href="/employees">Back to List</a>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+    EmployeeCreateDto? Employee;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Load departments via service
+        var allDepartments = await EmployeeService.GetAllDepartmentsAsync();
+        Employee = new EmployeeCreateDto
+        {
+            Departments = allDepartments,
+            FirstName = string.Empty,
+            LastName = string.Empty
+        };
+    }
+
+    async Task AddEmployee()
+    {
+        if (Employee is null) return;
+
+        await EmployeeService.CreateAsync(Employee);
+        NavigationManager.NavigateTo("/employees");
+    }
+}

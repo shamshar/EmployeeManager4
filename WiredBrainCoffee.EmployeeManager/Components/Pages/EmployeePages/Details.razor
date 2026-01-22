@@ -1,0 +1,62 @@
+﻿@page "/employees/details"
+@using WiredBrainCoffee.EmployeeManager.Models
+@using WiredBrainCoffee.EmployeeManager.Services
+@inject IEmployeeService EmployeeService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Employee Details</PageTitle>
+
+<h1>Employee Details</h1>
+
+@if (employee is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table table-bordered">
+        <tbody>
+            <tr>
+                <th>First Name</th>
+                <td>@employee.FirstName</td>
+            </tr>
+            <tr>
+                <th>Last Name</th>
+                <td>@employee.LastName</td>
+            </tr>
+            <tr>
+                <th>Developer</th>
+                <td>@((employee.IsDeveloper ? "Yes" : "No"))</td>
+            </tr>
+            <tr>
+                <th>Department</th>
+                <td>@employee.DepartmentName</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div>
+        <a href="@($"/employees/edit?id={employee.Id}")" class="btn btn-primary btn-sm">Edit</a>
+        <a href="/employees" class="btn btn-outline-secondary btn-sm">Back to List</a>
+    </div>
+
+
+
+}
+
+@code {
+    [SupplyParameterFromQuery]
+    public int Id { get; set; }
+
+    EmployeeDto? employee;
+
+    protected override async Task OnInitializedAsync()
+    {
+        employee = await EmployeeService.GetByIdAsync(Id);
+
+        if (employee is null)
+        {
+            NavigationManager.NavigateTo("/notfound");
+        }
+    }
+}

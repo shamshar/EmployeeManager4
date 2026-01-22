@@ -1,0 +1,89 @@
+﻿@page "/employees/edit"
+@using WiredBrainCoffee.EmployeeManager.Models
+@using WiredBrainCoffee.EmployeeManager.Services
+@inject IEmployeeService EmployeeService
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<PageTitle>Edit Employee</PageTitle>
+
+<h1>Edit Employee</h1>
+
+@if (Employee is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm Model="Employee" OnValidSubmit="UpdateEmployee" FormName="editEmployeeForm">
+
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <input type="hidden" @bind="Employee.Id" />
+
+                <div class="mb-3">
+                    <label for="firstname" class="form-label">First Name:</label>
+                    <InputText id="firstname" @bind-Value="Employee.FirstName" class="form-control" />
+                    <ValidationMessage For="() => Employee.FirstName" class="text-danger" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="lastname" class="form-label">Last Name:</label>
+                    <InputText id="lastname" @bind-Value="Employee.LastName" class="form-control" />
+                    <ValidationMessage For="() => Employee.LastName" class="text-danger" />
+                </div>
+
+                <div class="mb-3 form-check">
+                    <InputCheckbox id="isdeveloper" @bind-Value="Employee.IsDeveloper" class="form-check-input" />
+                    <label class="form-check-label" for="isdeveloper">Is Developer</label>
+                    <ValidationMessage For="() => Employee.IsDeveloper" class="text-danger" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="department" class="form-label">Department:</label>
+                    <InputSelect id="department" @bind-Value="Employee.DepartmentId" class="form-select">
+                        @if (Employee.Departments is not null)
+                        {
+                            @foreach (var dept in Employee.Departments)
+                            {
+                                <option value="@dept.Id">@dept.Name</option>
+                            }
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="() => Employee.DepartmentId" class="text-danger" />
+                </div>
+
+                <button type="submit" class="btn btn-primary">Save</button>
+                <a class="btn btn-secondary ms-2" href="/employees">Back to List</a>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+    [SupplyParameterFromQuery]
+    public int Id { get; set; }
+
+    EmployeeEditDto? Employee;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Employee = await EmployeeService.GetEditAsync(Id);
+
+        if (Employee is null)
+        {
+            NavigationManager.NavigateTo("/notfound");
+        }
+    }
+
+    async Task UpdateEmployee()
+    {
+        if (Employee is null) return;
+
+        await EmployeeService.UpdateAsync(Employee);
+        NavigationManager.NavigateTo("/employees");
+    }
+}

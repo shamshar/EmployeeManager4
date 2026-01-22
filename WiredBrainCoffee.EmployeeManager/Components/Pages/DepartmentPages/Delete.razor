@@ -1,0 +1,55 @@
+﻿@page "/departments/delete"
+
+@using WiredBrainCoffee.EmployeeManager.Models
+@using WiredBrainCoffee.EmployeeManager.Services
+@inject IDepartmentService DepartmentService
+@inject NavigationManager NavigationManager
+
+<h1>Delete</h1>
+
+@if (department is null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <p>Are you sure you want to delete <strong>@department.Name</strong>?</p>
+
+    @if (infoMessage is not null)
+    {
+        <p class="alert alert-info">@infoMessage</p>
+    }
+
+    <EditForm Model="department" OnValidSubmit="DeleteDepartment" FormName="delete">
+        <button type="submit" class="btn btn-danger">Delete</button>
+        <a href="/departments" class="btn btn-secondary ms-2">Cancel</a>
+    </EditForm>
+}
+
+@code {
+    DepartmentDto? department;
+    string? infoMessage;
+
+    [SupplyParameterFromQuery]
+    public int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        department = await DepartmentService.GetByIdAsync(Id);
+        if (department is null)
+            NavigationManager.NavigateTo("/notfound");
+    }
+
+    async Task DeleteDepartment()
+    {
+        try
+        {
+            await DepartmentService.DeleteAsync(Id);
+            NavigationManager.NavigateTo("/departments");
+        }
+        catch (InvalidOperationException ex)
+        {
+            infoMessage = ex.Message;
+        }
+    }
+}

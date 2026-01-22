@@ -1,0 +1,151 @@
+﻿@page "/employees"
+
+@using WiredBrainCoffee.EmployeeManager.Models
+@using WiredBrainCoffee.EmployeeManager.Services
+@inject IEmployeeService EmployeeService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<h1>Employees</h1>
+
+<p>
+    <button class="btn btn-primary" @onclick="GoToCreate">Create New</button>
+</p>
+
+<input type="search"
+       class="form-control mb-3"
+       placeholder="Search by First Name"
+       @bind="FirstNameFilter"
+       @bind:event="oninput" />
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Developer</th>
+            <th>Department</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (PagedEmployees.Any())
+        {
+            @foreach (var e in PagedEmployees)
+            {
+                <tr>
+                    <td>@e.FirstName</td>
+                    <td>@e.LastName</td>
+                    <td>@(e.IsDeveloper ? "Yes" : "No")</td>
+                    <td>@e.DepartmentName</td>
+                    <td>
+                        <a class="btn btn-primary btn-sm me-1" href="@($"employees/edit?id={e.Id}")">Edit</a>
+                        <a class="btn btn-info btn-sm me-1" href="@($"employees/details?id={e.Id}")">Details</a>
+                        <a class="btn btn-danger btn-sm" href="@($"employees/delete?id={e.Id}")">Delete</a>
+
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="5">No employees found.</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <button class="btn btn-secondary me-1" @onclick="FirstPage" disabled="@IsFirstPage">First</button>
+    <button class="btn btn-secondary me-1" @onclick="PreviousPage" disabled="@IsFirstPage">Previous</button>
+    <span>Page @CurrentPage of @TotalPages</span>
+    <button class="btn btn-secondary ms-1" @onclick="NextPage" disabled="@IsLastPage">Next</button>
+    <button class="btn btn-secondary ms-1" @onclick="LastPage" disabled="@IsLastPage">Last</button>
+</div>
+
+@code {
+    private List<EmployeeDto> Employees = new();
+    private List<EmployeeDto> FilteredEmployees = new();
+    private List<EmployeeDto> PagedEmployees = new();
+
+    private string firstNameFilter = "";
+
+    private int PageSize = 5; // Max rows per page
+    private int CurrentPage = 1;
+
+    private int TotalPages => FilteredEmployees.Any()
+        ? (int)Math.Ceiling((double)FilteredEmployees.Count / PageSize)
+        : 1;
+
+    private bool IsFirstPage => CurrentPage <= 1;
+    private bool IsLastPage => CurrentPage >= TotalPages;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Employees = await EmployeeService.GetAllAsync();
+        ApplyFiltering();
+    }
+
+    private string FirstNameFilter
+    {
+        get => firstNameFilter;
+        set
+        {
+            firstNameFilter = value;
+            ApplyFiltering();
+        }
+    }
+
+    private void ApplyFiltering()
+    {
+        FilteredEmployees = string.IsNullOrWhiteSpace(firstNameFilter)
+            ? Employees
+            : Employees
+                .Where(e => e.FirstName.Contains(firstNameFilter, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+        CurrentPage = 1; // reset page
+        ApplyPaging();
+    }
+
+    private void ApplyPaging()
+    {
+        PagedEmployees = FilteredEmployees
+            .Skip((CurrentPage - 1) * PageSize)
+            .Take(PageSize)
+            .ToList();
+    }
+
+    private void NextPage()
+    {
+        if (!IsLastPage)
+        {
+            CurrentPage++;
+            ApplyPaging();
+        }
+    }
+
+    private void PreviousPage()
+    {
+        if (!IsFirstPage)
+        {
+            CurrentPage--;
+            ApplyPaging();
+        }
+    }
+
+    private void FirstPage()
+    {
+        CurrentPage = 1;
+        ApplyPaging();
+    }
+
+    private void LastPage()
+    {
+        CurrentPage = TotalPages;
+        ApplyPaging();
+    }
+
+    private void GoToCreate() => Navigation.NavigateTo("employees/create");
+}

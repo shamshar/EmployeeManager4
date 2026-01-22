@@ -1,0 +1,50 @@
+﻿@page "/departments/details"
+@using WiredBrainCoffee.EmployeeManager.Models
+@using WiredBrainCoffee.EmployeeManager.Services
+@inject IDepartmentService DepartmentService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Department Details</PageTitle>
+
+<h1>Department Details</h1>
+<hr />
+
+@if (department is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table table-bordered">
+        <tbody>
+            <tr>
+                <th>Name</th>
+                <td>@department.Name</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div>
+        <a href="@($"/departments/edit?id={department.Id}")" class="btn btn-primary btn-sm">Edit</a>
+        <a href="/departments" class="btn btn-outline-secondary btn-sm">Back to List</a>
+    </div>
+}
+
+@code {
+    DepartmentDto? department;
+
+    [SupplyParameterFromQuery]
+    public int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Get the department via service
+        department = await DepartmentService.GetByIdAsync(Id);
+
+        if (department is null)
+        {
+            // Navigate to a NotFound page
+            NavigationManager.NavigateTo("/notfound");
+        }
+    }
+}

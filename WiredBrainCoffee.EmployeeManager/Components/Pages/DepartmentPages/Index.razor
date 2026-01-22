@@ -1,0 +1,122 @@
+﻿@page "/departments"
+
+@using WiredBrainCoffee.EmployeeManager.Models
+@using WiredBrainCoffee.EmployeeManager.Services
+@inject IDepartmentService DepartmentService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<h1>Departments</h1>
+
+<p>
+    <button class="btn btn-primary" @onclick="GoToCreate">Create New</button>
+</p>
+
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Department Name</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (PagedDepartments.Any())
+        {
+            @foreach (var dept in PagedDepartments)
+            {
+                <tr>
+                    <td>@dept.Name</td>
+                    <td>
+                        <a class="btn btn-primary btn-sm me-1" href="@($"departments/edit?id={dept.Id}")">Edit</a>
+                        <a class="btn btn-info btn-sm me-1" href="@($"departments/details?id={dept.Id}")">Details</a>
+                        <a class="btn btn-danger btn-sm" href="@($"departments/delete?id={dept.Id}")">Delete</a>
+
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="2">No departments to display.</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="d-flex justify-content-between align-items-center">
+    <div>
+        <button class="btn btn-secondary me-1" @onclick="FirstPage" disabled="@IsFirstPage">First</button>
+        <button class="btn btn-secondary me-1" @onclick="PreviousPage" disabled="@IsFirstPage">Previous</button>
+        <button class="btn btn-secondary me-1" @onclick="NextPage" disabled="@IsLastPage">Next</button>
+        <button class="btn btn-secondary" @onclick="LastPage" disabled="@IsLastPage">Last</button>
+    </div>
+    <div>
+        Page @CurrentPage of @TotalPages
+    </div>
+</div>
+
+@code {
+    private List<DepartmentDto> Departments = new();
+    private List<DepartmentDto> PagedDepartments = new();
+
+    private int PageSize = 5; // Max rows per page
+    private int CurrentPage = 1;
+
+    private int TotalPages => Math.Max(1, (int)Math.Ceiling((double)Departments.Count / PageSize));
+
+    private bool IsFirstPage => CurrentPage <= 1;
+    private bool IsLastPage => CurrentPage >= TotalPages;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Departments = await DepartmentService.GetAllAsync();
+        CurrentPage = 1; // reset page to first
+        UpdatePagedDepartments();
+    }
+
+    private void UpdatePagedDepartments()
+    {
+        // Clamp CurrentPage to valid range
+        if (CurrentPage > TotalPages) CurrentPage = TotalPages;
+        if (CurrentPage < 1) CurrentPage = 1;
+
+        PagedDepartments = Departments
+            .Skip((CurrentPage - 1) * PageSize)
+            .Take(PageSize)
+            .ToList();
+    }
+
+    private void NextPage()
+    {
+        if (!IsLastPage)
+        {
+            CurrentPage++;
+            UpdatePagedDepartments();
+        }
+    }
+
+    private void PreviousPage()
+    {
+        if (!IsFirstPage)
+        {
+            CurrentPage--;
+            UpdatePagedDepartments();
+        }
+    }
+
+    private void FirstPage()
+    {
+        CurrentPage = 1;
+        UpdatePagedDepartments();
+    }
+
+    private void LastPage()
+    {
+        CurrentPage = TotalPages;
+        UpdatePagedDepartments();
+    }
+
+    private void GoToCreate() => Navigation.NavigateTo("departments/create");
+}
