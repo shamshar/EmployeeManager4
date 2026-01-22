@@ -61,3 +61,17 @@ Modern Blazor UI for a responsive experience
 Local database support (SQL Server/SQLite)
 
 Clean architecture following best practices
+
+
+
+Feel free to reach out if you have any questions or need further assistance.
+
+Thank you,
+Shamshar Ali
+
+shamsharali1@gmail.com
+
+ShamsharWiredBrainCoffee
+
+EmployeeManager4 - Employee Management System
+A Blazor .NET 8 web application for managing employee records with a clean architecture, modern UI, and full CRUD functionality.
